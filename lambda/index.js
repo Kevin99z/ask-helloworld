@@ -9,6 +9,13 @@ const i18n = require('i18next');
 // i18n strings for all supported locales
 const languageStrings = require('./languageStrings');
 
+const helloworldDocument = require('./helloworldDocument.json');
+const helloworldWithButtonDocument = require('./helloworldWithButtonDocument.json');
+
+// Tokens used when sending the APL directives
+const HELLO_WORLD_TOKEN = 'helloworldToken';
+const HELLO_WORLD_WITH_BUTTON_TOKEN = 'helloworldWithButtonToken';
+
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
@@ -19,6 +26,115 @@ const LaunchRequestHandler = {
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(speakOutput)
+            .getResponse();
+    }
+};
+
+const HelloWorldWithButtonIntentHandler = { // Typo "Hander"
+    canHandle(handlerInput){
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'HelloWorldWithButtonIntent';
+    },
+    handle(handlerInput){
+        let speakOutput = "Hello world.";
+        let responseBuilder = handlerInput.responseBuilder;
+        if (Alexa.getSupportedInterfaces(handlerInput.requestEnvelope)['Alexa.Presentation.APL']){
+            
+            // Add the RenderDocument directive to the responseBuilder
+            responseBuilder.addDirective({
+                type: 'Alexa.Presentation.APL.RenderDocument',
+                token: HELLO_WORLD_WITH_BUTTON_TOKEN,
+                document: helloworldWithButtonDocument,
+            });
+            
+            // Tailor the speech for a device with a screen.
+            speakOutput += " Welcome to Alexa Presentation Language. Click the button to see what happens!"
+        } else {
+            speakOutput += " This example would be more interesting on a device with a screen, such as an Echo Show or Fire TV."
+        }
+        return responseBuilder
+            .speak(speakOutput)
+            //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
+            .getResponse();
+    }
+}
+
+const HelloWorldButtonEventHandler = {
+    canHandle(handlerInput){
+        // Since an APL skill might have multiple buttons that generate UserEvents,
+        // use the event source ID to determine the button press that triggered
+        // this event and use the correct handler. In this example, the string 
+        // 'fadeHelloTextButton' is the ID we set on the AlexaButton in the document.
+        
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'Alexa.Presentation.APL.UserEvent'
+            && handlerInput.requestEnvelope.request.source.id === 'fadeHelloTextButton';
+    },
+    handle(handlerInput){
+        const speakOutput = "Thank you for clicking the button! I imagine you already noticed that the text faded away. Tell me to start over to bring it back!";
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            .reprompt("Tell me to start over if you want me to bring the text back into view. Or, you can just say hello again.")
+            .getResponse();
+    }
+}
+
+
+const StartOverIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.StartOverIntent';
+    },
+    handle(handlerInput) {
+        let speakOutput = '';
+        let responseBuilder = handlerInput.responseBuilder;
+        
+        if (Alexa.getSupportedInterfaces(handlerInput.requestEnvelope)['Alexa.Presentation.APL']) {
+            speakOutput = "";
+            
+            // Get the APL visual context information and determine whether the
+            // device is displaying the document with the token HELLO_WORLD_WITH_BUTTON_TOKEN
+            const contextApl = handlerInput.requestEnvelope.context['Alexa.Presentation.APL'];
+            if (contextApl && contextApl.token === HELLO_WORLD_WITH_BUTTON_TOKEN){
+                // build an ExecuteCommands directive to change the opacity of the Text component
+                // back to 1 so that it displays again. Note that the token included in the
+                // directive MUST match the token of the document that is displaying
+                
+                speakOutput = "OK, I'm going to try to bring that text back into view.";
+                
+                // Create an APL command that gradually changes the opacity of the 
+                // component back to 1 over 3 seconds
+                const animateItemCommand = {
+                    type: "AnimateItem",
+                    componentId: "helloTextComponent",
+                    duration: 3000,
+                    value: [
+                        {
+                            property: "opacity",
+                            to: 1
+                        }
+                    ]
+                }
+                
+                // Add the command to an ExecuteCommands directive and add this to
+                // the response
+                responseBuilder.addDirective({
+                    type: 'Alexa.Presentation.APL.ExecuteCommands',
+                    token: HELLO_WORLD_WITH_BUTTON_TOKEN,
+                    commands: [animateItemCommand]
+                })
+
+                
+            } else {
+                // Device is NOT displaying the expected document, so provide 
+                // relevant output speech.
+                speakOutput = "Hmm, there isn't anything for me to reset. Try invoking the 'hello world with button intent', then click the button and see what happens!";
+            }
+        } else {
+            speakOutput = "Hello, this sample is more interesting when used on a device with a screen. Try it on an Echo Show, Echo Spot or a Fire TV device.";
+        }
+        
+        return responseBuilder
+            .speak(speakOutput)
             .getResponse();
     }
 };
@@ -188,6 +304,9 @@ const LocalisationRequestInterceptor = {
 exports.handler = Alexa.SkillBuilders.custom()
     .addRequestHandlers(
         LaunchRequestHandler,
+        HelloWorldWithButtonIntentHandler,
+        HelloWorldButtonEventHandler,
+        StartOverIntentHandler,
         HelloWorldIntentHandler,
         HelpIntentHandler,
         CancelAndStopIntentHandler,
