@@ -46,6 +46,35 @@ const HelpIntentHandler = {
     handle(handlerInput) {
         const speakOutput = handlerInput.t('HELP_MSG');
 
+        if (Alexa.getSupportedInterfaces(handlerInput.requestEnvelope)['Alexa.Presentation.APL']){
+            console.log("The user's device supports APL");
+        
+            const documentName = "HelloWorldDocument"; // Name of the document saved in the authoring tool
+            const token = documentName + "Token";
+        
+            // Add the RenderDocument directive to the response
+            handlerInput.responseBuilder.addDirective({
+                type: 'Alexa.Presentation.APL.RenderDocument',
+                token: token,
+                document: {
+                    src: 'doc://alexa/apl/documents/' + documentName,
+                    type: 'Link'
+                },
+                datasources: {
+                    "helloWorldDataSource": {
+                        "primaryText": "Hello World!",
+                        "secondaryText": "Welcome to Alexa Presentation Language!",
+                        "color": "@colorTeal800"
+                    }
+                }
+            });
+            
+        } else {
+            // Just log the fact that the device doesn't support APL.
+            // In a real skill, you might provide different speech to the user.
+            console.log("The user's device doesn't support APL. Retest on a device with a screen")
+        }
+        
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(speakOutput)
