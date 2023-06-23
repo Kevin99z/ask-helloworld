@@ -9,7 +9,7 @@ const i18n = require('i18next');
 // i18n strings for all supported locales
 const languageStrings = require('./languageStrings');
 
-const helloworldDocument = require('./helloworldDocument.json');
+// const helloworldDocument = require('./helloworldDocument.json');
 const helloworldWithButtonDocument = require('./helloworldWithButtonDocument.json');
 
 // Tokens used when sending the APL directives
