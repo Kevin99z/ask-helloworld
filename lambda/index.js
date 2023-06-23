@@ -50,7 +50,7 @@ const HelpIntentHandler = {
             console.log("The user's device supports APL");
         
             const documentName = "HelloWorldDocument"; // Name of the document saved in the authoring tool
-            const token = documentName + "Token";
+            const token = "DocumentToken";
         
             // Add the RenderDocument directive to the response
             handlerInput.responseBuilder.addDirective({
