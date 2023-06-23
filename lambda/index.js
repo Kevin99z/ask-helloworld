@@ -31,21 +31,6 @@ const HelloWorldIntentHandler = {
     handle(handlerInput) {
         const speakOutput = handlerInput.t('HELLO_MSG');
 
-        return handlerInput.responseBuilder
-            .speak(speakOutput)
-            //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
-            .getResponse();
-    }
-};
-
-const HelpIntentHandler = {
-    canHandle(handlerInput) {
-        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
-            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.HelpIntent';
-    },
-    handle(handlerInput) {
-        const speakOutput = handlerInput.t('HELP_MSG');
-
         if (Alexa.getSupportedInterfaces(handlerInput.requestEnvelope)['Alexa.Presentation.APL']){
             console.log("The user's device supports APL");
         
@@ -75,6 +60,21 @@ const HelpIntentHandler = {
             console.log("The user's device doesn't support APL. Retest on a device with a screen")
         }
         
+        return handlerInput.responseBuilder
+            .speak(speakOutput)
+            //.reprompt('add a reprompt if you want to keep the session open for the user to respond')
+            .getResponse();
+    }
+};
+
+const HelpIntentHandler = {
+    canHandle(handlerInput) {
+        return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+            && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.HelpIntent';
+    },
+    handle(handlerInput) {
+        const speakOutput = handlerInput.t('HELP_MSG');
+
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(speakOutput)
