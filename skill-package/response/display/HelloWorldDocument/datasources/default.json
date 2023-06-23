@@ -1,0 +1,7 @@
+{
+    "helloWorldDataSource": {
+        "primaryText": "Hello World!",
+        "secondaryText": "Welcome to Alexa Presentation Language!",
+        "color": "@colorTeal800"
+    }
+}
